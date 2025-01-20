@@ -1,0 +1,60 @@
+online_bookstore/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                # Entry point for the application
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── dependencies.py    # Dependency injections
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── books.py       # Routes related to books
+│   │   │   ├── users.py       # Routes related to user management
+│   │   │   ├── orders.py      # Routes for order management
+│   │   │   ├── auth.py        # Authentication-related routes
+│   │   │   ├── reviews.py     # Routes for reviews and ratings
+│   │   │   └── analytics.py   # Routes for admin analytics
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py          # Application configurations (e.g., environment variables)
+│   │   ├── security.py        # JWT token creation/verification
+│   │   └── hashing.py         # Password hashing utilities
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── base.py            # Base metadata and database engine
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── user.py        # User model
+│   │   │   ├── book.py        # Book model
+│   │   │   ├── order.py       # Order and OrderDetails models
+│   │   │   ├── category.py    # Category model
+│   │   │   ├── review.py      # Review model
+│   │   │   └── author.py      # Author model
+│   │   └── migrations/        # Migration files (if using Alembic)
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── user.py            # Pydantic schemas for user-related endpoints
+│   │   ├── book.py            # Schemas for books
+│   │   ├── order.py           # Schemas for orders
+│   │   ├── category.py        # Schemas for categories
+│   │   ├── review.py          # Schemas for reviews
+│   │   └── auth.py            # Schemas for authentication
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── user_service.py    # User-related business logic
+│   │   ├── book_service.py    # Book-related business logic
+│   │   ├── order_service.py   # Order-related business logic
+│   │   ├── review_service.py  # Review-related business logic
+│   │   └── analytics_service.py # Analytics logic for admins
+│   └── tests/
+│       ├── __init__.py
+│       ├── test_users.py      # Test cases for user-related endpoints
+│       ├── test_books.py      # Test cases for books
+│       ├── test_orders.py     # Test cases for orders
+│       ├── test_reviews.py    # Test cases for reviews
+│       └── test_auth.py       # Test cases for authentication
+├── .env                       # Environment variables (e.g., database URL, secret keys)
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Dockerfile for containerization
+├── docker-compose.yml         # Docker Compose file for multi-container setup
+├── alembic.ini                # Alembic configuration file
+└── README.md                  # Project documentation
