@@ -1,0 +1,10 @@
+from enum import Enum
+
+
+class BookCategory(Enum):
+	FICTION = "FICTION"
+	NON_FICTION = "NON-FICTION"
+	SCIENCE = "SCIENCE"
+	HISTORY = "HISTORY"
+	FANTASY = "FANTASY"
+	BIOGRAPHY = "BIOGRAPHY"
