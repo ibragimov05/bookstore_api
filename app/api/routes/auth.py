@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError
 
 from app.core.utils.get_db import DB_DEPENDENCY
 from app.core.utils.helpers import is_valid_email
@@ -9,7 +8,7 @@ from app.services.auth_service import *
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 router = APIRouter(prefix='/auth', tags=['auth'])
@@ -40,16 +39,8 @@ async def login(
 			detail="Account is inactive. Please contact support.",
 		)
 
-	a_token = create_token(
-		user=user,
-		expired_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-		is_refresh_token=False,
-	)
-	r_token = create_token(
-		user=user,
-		expired_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-		is_refresh_token=True,
-	)
+	a_token = create_token(user=user, expired_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+	r_token = create_token(user=user, expired_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
 	return {
 		"token": {
@@ -127,17 +118,8 @@ async def refresh_token(db: DB_DEPENDENCY, token: str):
 		if not user:
 			raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-		new_access_token = create_token(
-			user=user,
-			expired_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-			is_refresh_token=False,
-		)
-
-		new_refresh_token = create_token(
-			user=user,
-			expired_delta=timedelta(minutes=REFRESH_TOKEN_EXPIRE_DAYS),
-			is_refresh_token=True,
-		)
+		new_access_token = create_token(user=user, expired_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+		new_refresh_token = create_token(user=user, expired_delta=timedelta(minutes=REFRESH_TOKEN_EXPIRE_DAYS))
 
 		return {
 			"token_type": "bearer",
