@@ -38,12 +38,12 @@ async def sign_in(db: DB_DEPENDENCY, create_user_request: CreateUserScheme):
 		hashed_password=bcrypt_context.hash(create_user_request.password)
 	)
 
-	# Add user to the session and commit
 	db.add(create_user_model)
+
 	try:
 		db.commit()
-		db.refresh(create_user_model)  # Refresh to get the user with the ID after commit
-		return create_user_model  # Optionally, return the created user (omit sensitive fields)
+		db.refresh(create_user_model)
+		return create_user_model
 	except Exception as e:
 		db.rollback()
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

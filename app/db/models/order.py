@@ -13,11 +13,11 @@ class Order(Base):
 	user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 	total_amount = Column(Float, nullable=False)
 	status = Column(String, default='PENDING')
-	created_at = Column(DateTime, default=datetime)
-	updated_at = Column(DateTime, default=datetime)
+	created_at = Column(DateTime, default=datetime.now())
+	updated_at = Column(DateTime, default=datetime.now())
 
 	user = relationship("User", back_populates="orders")
-	order_items = relationship("OrderItem", back_populates="Order", cascade="all, delete-orphan")
+	order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
 	def __repr__(self):
 		return f"<Order(id={self.id}, user_id={self.user_id}, status={self.status}, total_amount={self.total_amount})>"

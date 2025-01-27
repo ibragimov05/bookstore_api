@@ -18,7 +18,8 @@ class Book(Base):
 
 	# Relationships
 	author = relationship("Author", back_populates="books")
-	reviews = relationship("Review", back_populates="books")
+	reviews = relationship("Review", back_populates="book")
+	order_items = relationship("OrderItem", back_populates="book")
 
 	def __repr__(self):
 		return f"<Book(title={self.title}, price={self.price})>"
