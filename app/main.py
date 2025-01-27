@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.routes.auth import router as auth_router
+from app.api.routes.book import router as book_router
 from app.db.base import Base, engine
 
 app = FastAPI()
@@ -13,3 +14,4 @@ def health_check():
 
 
 app.include_router(auth_router)
+app.include_router(book_router)
