@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
 from app.core.utils.get_db import DB_DEPENDENCY
+from app.core.utils.helpers import is_valid_email
 from app.db.models.user import User
 from app.schemes.user_scheme import CreateUserScheme
 
@@ -28,8 +29,12 @@ async def sign_in(db: DB_DEPENDENCY, create_user_request: CreateUserScheme):
 			status_code=status.HTTP_400_BAD_REQUEST,
 			detail="Username or email already registered"
 		)
+	elif not is_valid_email(create_user_request.email):
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail='Invalid email address. Please check the format.'
+		)
 
-	# Create the new user model
 	create_user_model = User(
 		username=create_user_request.username,
 		email=create_user_request.email,
@@ -43,7 +48,9 @@ async def sign_in(db: DB_DEPENDENCY, create_user_request: CreateUserScheme):
 	try:
 		db.commit()
 		db.refresh(create_user_model)
+
 		return create_user_model
 	except Exception as e:
 		db.rollback()
+
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
