@@ -6,7 +6,6 @@ class BookBase(BaseModel):
 	description: str | None = None
 	price: float
 	stock: int
-	isbn: str | None = None
 	published_year: int | None = None
 
 
