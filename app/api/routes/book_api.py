@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.core.utils.get_db import DB_DEPENDENCY
-from app.db.models import Book
-from app.schemes.book_scheme import BookCreate
+from app.db.models import Author, Book
+from app.schemes.book_scheme import BookCreate, BookUpdate
 from app.services.auth_service import verify_token
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -20,11 +20,24 @@ def read_books(db: DB_DEPENDENCY, token: str = Depends(oauth2_bearer)):
 	if user_data is None:
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-	print(f"Access granted for user: {user_data.username}")
-
 	all_books = db.query(Book).all()
-	# Return the books
-	return {"success": True, "message": f"Books retrieved for user: {user_data.username}", "response": all_books}
+
+	return {"success": True, "response": all_books}
+
+
+@router.get('/{book_id}')
+def read_single_book(db: DB_DEPENDENCY, book_id: int, token: str = Depends(oauth2_bearer)):
+	user_data = verify_token(token)
+
+	if user_data is None:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+	single_book = db.query(Book).filter(Book.id == book_id).first()
+
+	if single_book is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
+	return {"success": True, "response": single_book}
 
 
 @router.post("/create")
@@ -35,6 +48,8 @@ def create_book(db: DB_DEPENDENCY, book_create: BookCreate, token: str = Depends
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 	if not user_data.is_admin:
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ony admins are allowed to create book")
+	if db.query(Author).filter(Author.id == book_create.author_id).first() is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author with the given id not found")
 
 	create_book_model = Book(
 		title=book_create.title,
@@ -50,21 +65,22 @@ def create_book(db: DB_DEPENDENCY, book_create: BookCreate, token: str = Depends
 		db.add(create_book_model)
 		db.commit()
 		db.refresh(create_book_model)
+
+		return {"success": True, "message": "book created successfully"}
+
 	except Exception as e:
 		db.rollback()
 
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-# id = Column(Integer, primary_key=True, index=True)
-# 	title = Column(String, nullable=False)
-# 	description = Column(Text, nullable=True)
-# 	price = Column(Float, nullable=False)
-# 	stock = Column(Integer, default=0)
-# 	author_id = Column(Integer, ForeignKey('authors.id'), nullable=False)
-# 	category_id = Column(String, nullable=False)
-# 	published_year = Column(Integer, nullable=True)
-#
-# 	# Relationships
-# 	author = relationship("Author", back_populates="books")
-# 	reviews = relationship("Review", back_populates="book")
-# 	order_items = relationship("OrderItem", back_populates="book")
+
+@router.put("/update/{book_id}")
+def update_book(db: DB_DEPENDENCY, book_id: int, book_create: BookUpdate, token: str = Depends(oauth2_bearer)):
+	user_data = verify_token(token)
+
+	if user_data is None:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+	if not user_data.is_admin:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ony admins are allowed to create book")
+	if db.query(Author).filter(Author.id == book_create.author_id).first() is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author with the given id not found")

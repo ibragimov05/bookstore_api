@@ -11,7 +11,10 @@ class BookBase(BaseModel):
 
 class BookCreate(BookBase):
 	author_id: int
-	category_id: int
+
+
+class BookUpdate(BookBase):
+	author_id: int
 
 
 class BookResponse(BookBase):
