@@ -7,6 +7,7 @@ class BookBase(BaseModel):
 	price: float
 	stock: int
 	published_year: int | None = None
+	category_id: int
 
 
 class BookCreate(BookBase):
