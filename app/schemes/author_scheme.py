@@ -8,3 +8,7 @@ class AuthorBase(BaseModel):
 
 class AuthorCreate(AuthorBase):
 	pass
+
+
+class AuthorUpdate(AuthorBase):
+	pass
