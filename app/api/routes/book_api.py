@@ -1,5 +1,3 @@
-from http.client import HTTPException
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import joinedload
 
@@ -90,14 +88,37 @@ def update_book(db: DB_DEPENDENCY, book_id: int, book_update: BookUpdate, token:
 
 	author = db.query(Author).filter(Author.id == book_update.author_id).first()
 	book = db.query(Book).filter(book_id == Book.id).first()
+	category = db.query(Category).filter(Category.id == book_update.category_id).first()
 
 	if book is None:
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Book with the given id not found')
 	if author is None:
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author with the given id not found")
+	if category is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category with the given id not found")
 
 	for key, value in book_update.model_dump().items():
 		setattr(book, key, value)
 
 	db.add(book)
 	db.commit()
+
+
+@router.delete("/delete/{book_id}")
+def delete_book(db: DB_DEPENDENCY, book_id: int, token: str = Depends(oauth2_bearer)):
+	user_data = verify_token(token)
+
+	if user_data is None:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+	if not user_data.is_admin:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Ony admins are allowed to delete book")
+
+	book = db.query(Book).filter(Book.id == book_id).first()
+
+	if book is None:
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book with the given id not found")
+
+	db.delete(book)
+	db.commit()
+
+	return {"success": True, "message": "book deleted successfully"}
