@@ -12,6 +12,7 @@ class Order(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 	total_amount = Column(Float, nullable=False)
+	total_quantity = Column(Integer, nullable=False)
 	status = Column(String, default='PENDING')
 	created_at = Column(DateTime, default=datetime.now())
 	updated_at = Column(DateTime, default=datetime.now())

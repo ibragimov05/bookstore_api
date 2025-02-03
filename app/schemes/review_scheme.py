@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ReviewScheme(BaseModel):
 	content: str
-	rating: int
+	rating: int = Field(gt=0, lt=6)
 	book_id: int
 
 
