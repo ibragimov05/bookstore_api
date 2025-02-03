@@ -7,3 +7,7 @@ class CategoryBase(BaseModel):
 
 class CategoryCreate(CategoryBase):
 	pass
+
+
+class CategoryUpdate(CategoryBase):
+	pass

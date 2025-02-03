@@ -13,7 +13,7 @@ class Book(Base):
 	price = Column(Float, nullable=False)
 	stock = Column(Integer, default=0)
 	author_id = Column(Integer, ForeignKey('authors.id'), nullable=False)
-	category_id = Column(Integer, ForeignKey('category.id'), nullable=False)  # Fixed ForeignKey type
+	category_id = Column(Integer, ForeignKey('category.id'), nullable=True)
 	published_year = Column(Integer, nullable=True)
 
 	# Relationships
