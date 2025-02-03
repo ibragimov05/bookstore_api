@@ -12,9 +12,9 @@ class Review(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 	book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
-	rating = Column(Float, nullable=False)  # Rating between 1 and 5
-	content = Column(Text, nullable=True)  # Optional review content
-	created_at = Column(DateTime, default=datetime.utcnow)
+	rating = Column(Float, nullable=False)
+	content = Column(Text, nullable=True)
+	created_at = Column(DateTime, default=datetime.now())
 
 	# Relationships
 	user = relationship("User", back_populates="reviews")
