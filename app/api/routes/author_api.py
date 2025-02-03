@@ -6,7 +6,7 @@ from app.db.models import Author
 from app.schemes.author_scheme import AuthorCreate, AuthorUpdate
 from app.services.auth_service import verify_token
 
-router = APIRouter(prefix='/authors', tags=['authors'])
+router = APIRouter(prefix='/author', tags=['author'])
 
 
 @router.get('/')

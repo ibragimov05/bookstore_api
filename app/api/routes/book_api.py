@@ -7,7 +7,7 @@ from app.db.models import Author, Book, Category
 from app.schemes.book_scheme import BookCreate, BookUpdate
 from app.services.auth_service import verify_token
 
-router = APIRouter(prefix='/books', tags=['books'])
+router = APIRouter(prefix='/book', tags=['book'])
 
 
 @router.get("/")

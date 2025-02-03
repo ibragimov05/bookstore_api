@@ -6,7 +6,7 @@ from app.db.models import Book, Review
 from app.schemes.review_scheme import ReviewCreate
 from app.services.auth_service import verify_token
 
-router = APIRouter(prefix='/reviews', tags=['reviews'])
+router = APIRouter(prefix='/review', tags=['review'])
 
 
 @router.post('/create')
