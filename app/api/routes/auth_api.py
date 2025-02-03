@@ -98,7 +98,7 @@ async def sign_in(db: DB_DEPENDENCY, create_user_request: CreateUserScheme):
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.post("/refresh", status_code=status.HTTP_200_OK)
+@router.put("/refresh", status_code=status.HTTP_200_OK)
 async def refresh_token(db: DB_DEPENDENCY, token: str):
 	try:
 		payload = decode_token(token)
