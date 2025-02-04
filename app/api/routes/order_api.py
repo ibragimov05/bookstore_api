@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import joinedload
 
 from app.api.routes.auth_api import oauth2_bearer
 from app.core.utils.get_db import DB_DEPENDENCY
+from app.core.utils.order_status import OrderStatus
 from app.db.models import Book, Order
 from app.db.models.order import OrderItem
 from app.schemes.order_scheme import OrderCreate
@@ -103,4 +106,49 @@ def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str = Depe
 	except Exception as e:
 		db.rollback()
 
+		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.put('/update/paid/{order_id}')
+def order_to_paid_status(db: DB_DEPENDENCY, order_id: int, new_status: str, token: str = Depends(oauth2_bearer)):
+	try:
+		user_data = verify_token(token)
+
+		if user_data is None:
+			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+		if not user_data.is_admin:
+			raise HTTPException(
+				status_code=status.HTTP_401_UNAUTHORIZED,
+				detail="Only admins are allowed to update order status",
+			)
+		new_status = new_status.upper()
+		if new_status != OrderStatus.PAID.value and new_status != OrderStatus.DELIVERED.value and new_status != OrderStatus.PENDING.value:
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail='Give valid status [PAID, DELIVERED, PENDING]',
+			)
+
+		order = db.query(Order).filter(Order.id == order_id).first()
+
+		if order is None:
+			raise HTTPException(
+				status_code=status.HTTP_404_NOT_FOUND,
+				detail=f"Order with the given id {order_id} not found",
+			)
+
+		if order.status == new_status:
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail=f"Order with id {order_id} is already in {order.status} status",
+			)
+
+		order.status = new_status
+		order.updated_at = datetime.now()
+
+		db.commit()
+		db.refresh(order)
+
+		return {"success": True, "message": "Order status updated to PAID", "response": order}
+	except Exception as e:
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
