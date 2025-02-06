@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.logger import logger
 from sqlalchemy.orm import joinedload
 
 from app.api.routes.auth_api import oauth2_bearer
@@ -15,8 +16,9 @@ router = APIRouter(prefix='/order', tags=['order'])
 
 
 @router.get('/')
-def get_all_orders(db: DB_DEPENDENCY, token: str = Depends(oauth2_bearer)):
+def get_all_orders(db: DB_DEPENDENCY, filter_by: str = None, token: str = Depends(oauth2_bearer)):
 	try:
+		logger.log(msg=f"Filter by: {filter_by}", level=1)
 		user_data = verify_token(token)
 
 		if user_data is None:
@@ -26,8 +28,21 @@ def get_all_orders(db: DB_DEPENDENCY, token: str = Depends(oauth2_bearer)):
 				status_code=status.HTTP_401_UNAUTHORIZED,
 				detail="Only admins are allowed to get all orders",
 			)
+		if filter_by is not None:
+			filter_by = filter_by.upper()
 
-		all_orders = db.query(Order).options(joinedload(Order.order_items)).all()
+			if filter_by not in [s.value for s in OrderStatus]:
+				raise HTTPException(
+					status_code=status.HTTP_400_BAD_REQUEST,
+					detail='Give valid status [PAID, DELIVERED, PENDING]',
+				)
+			else:
+				all_orders = db.query(Order). \
+					options(joinedload(Order.order_items)). \
+					filter(Order.status == filter_by). \
+					all()
+		else:
+			all_orders = db.query(Order).options(joinedload(Order.order_items)).all()
 
 		return {'success': True, 'response': all_orders}
 	except Exception as e:
@@ -109,7 +124,7 @@ def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str = Depe
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.put('/update/paid/{order_id}')
+@router.put('/update/{order_id}')
 def order_to_paid_status(db: DB_DEPENDENCY, order_id: int, new_status: str, token: str = Depends(oauth2_bearer)):
 	try:
 		user_data = verify_token(token)
