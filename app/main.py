@@ -32,7 +32,7 @@ async def lifespan(application: FastAPI):
 
 		# Cancel the bot task
 		if 'bot_task' in locals():
-			bot_task.cancel()
+			# bot_task.cancel()
 			try:
 				await bot_task
 			except asyncio.CancelledError:
