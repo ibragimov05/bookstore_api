@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 class OrderItemScheme(BaseModel):
 	book_id: int
 	quantity: int = Field(..., gt=0, description="Quantity must be greater than zero")
-	price_per_item: float
 
 	class Config:
 		orm_mode = True

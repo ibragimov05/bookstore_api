@@ -7,21 +7,21 @@ from sqlalchemy.orm import joinedload
 from app.api.routes.auth_api import oauth2_bearer
 from app.core.utils.get_db import DB_DEPENDENCY
 from app.core.utils.order_status import OrderStatus
+from app.core.utils.telegram_bot_response import send_order_notification_to_telegram
 from app.db.models import Book, Order
 from app.db.models.order import OrderItem
 from app.schemes.order_scheme import OrderCreate
 from app.services.auth_service import verify_token
-from app.services.bot_instance import bot_service
 
 router = APIRouter(prefix='/order', tags=['order'])
 
 
 @router.get('/')
 def get_all_orders(db: DB_DEPENDENCY, filter_by: str = None, token: str = Depends(oauth2_bearer)):
-	try:
-		logger.log(msg=f"Filter by: {filter_by}", level=1)
-		user_data = verify_token(token)
+	logger.log(msg=f"Filter by: {filter_by}", level=1)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 		if not user_data.is_admin:
@@ -52,9 +52,9 @@ def get_all_orders(db: DB_DEPENDENCY, filter_by: str = None, token: str = Depend
 
 @router.get('/user')
 def get_user_orders(db: DB_DEPENDENCY, token: str = Depends(oauth2_bearer)):
-	try:
-		user_data = verify_token(token)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
@@ -69,21 +69,24 @@ def get_user_orders(db: DB_DEPENDENCY, token: str = Depends(oauth2_bearer)):
 
 @router.post('/create')
 async def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str = Depends(oauth2_bearer)):
-	try:
-		user_data = verify_token(token)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+		books_in_db = []
 
 		for i in order_create.order_items:
 			book = db.query(Book).filter(Book.id == i.book_id).first()
 			if book is None:
 				raise HTTPException(
 					status_code=status.HTTP_404_NOT_FOUND,
-					detail=f"Book with the given id {i.book_id} not found",
+					detail=f"Book with the given ID {i.book_id} not found",
 				)
+			books_in_db.append(book)
 
-		total_amount = sum(item.price_per_item * item.quantity for item in order_create.order_items)
+		total_amount = sum(item.quantity * book.price for item, book in zip(order_create.order_items, books_in_db))
 		total_quantity = sum(item.quantity for item in order_create.order_items)
 
 		order = Order(
@@ -100,16 +103,16 @@ async def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str 
 				order_id=order.id,
 				book_id=item.book_id,
 				quantity=item.quantity,
-				price_per_item=item.price_per_item,
+				price_per_item=book.price,
 			)
-			for item in order_create.order_items
+			for item, book in zip(order_create.order_items, books_in_db)
 		]
 
 		db.add_all(order_items)
 		db.commit()
 		db.refresh(order)
 
-		telegram_bot_response = await bot_service.send_order_to_telegram_bot(order)
+		telegram_bot_response = await send_order_notification_to_telegram(order)
 
 		return {
 			"success": True,
@@ -117,6 +120,7 @@ async def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str 
 			"response": order,
 			"telegram_bot_response": telegram_bot_response
 		}
+
 	except Exception as e:
 		db.rollback()
 		raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -124,9 +128,9 @@ async def create_order(db: DB_DEPENDENCY, order_create: OrderCreate, token: str 
 
 @router.put('/update/{order_id}')
 def order_to_paid_status(db: DB_DEPENDENCY, order_id: int, new_status: str, token: str = Depends(oauth2_bearer)):
-	try:
-		user_data = verify_token(token)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 

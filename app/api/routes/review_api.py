@@ -11,9 +11,9 @@ router = APIRouter(prefix='/review', tags=['review'])
 
 @router.post('/create')
 def post_review(db: DB_DEPENDENCY, review_create: ReviewCreate, token: str = Depends(oauth2_bearer)):
-	try:
-		user_data = verify_token(token)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
@@ -45,9 +45,9 @@ def post_review(db: DB_DEPENDENCY, review_create: ReviewCreate, token: str = Dep
 
 @router.delete('/delete/{review_id}')
 def delete_review(db: DB_DEPENDENCY, review_id: int, token: str = Depends(oauth2_bearer)):
-	try:
-		user_data = verify_token(token)
+	user_data = verify_token(token)
 
+	try:
 		if user_data is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 

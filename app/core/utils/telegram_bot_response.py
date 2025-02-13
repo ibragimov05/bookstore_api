@@ -1,41 +1,30 @@
-from typing import List, Optional
+import os
 
-from pydantic import BaseModel
+import httpx
 
+from app.db.models import Order
 
-class FromUser(BaseModel):
-	id: int
-	is_bot: bool
-	first_name: str
-	last_name: Optional[str] = None
-	username: Optional[str] = None
-	language_code: Optional[str] = None
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = -4618071305
 
 
-class Chat(BaseModel):
-	id: int
-	first_name: str
-	last_name: Optional[str] = None
-	username: Optional[str] = None
-	type: str
+async def send_order_notification_to_telegram(order: Order):
+	text = (
+		f"🛒 *New Order Placed!* \n\n"
+		f"📦 *Order ID:* `{order.id}`\n"
+		f"👤 *User ID:* `{order.user_id}`\n"
+		f"💰 *Total Amount:* `${order.total_amount:.2f}`\n"
+		f"📦 *Total Items:* `{order.total_quantity}`\n"
+		f"🕒 *Ordered At:* `{order.created_at.strftime('%Y-%m-%d %H:%M:%S')}`\n"
+		f"📌 *Status:* `{order.status}`\n"
+	)
 
+	payload = {
+		"chat_id": TELEGRAM_CHAT_ID,
+		"text": text,
+		"parse_mode": "Markdown"
+	}
 
-class Message(BaseModel):
-	message_id: int
-	from_: FromUser
-	chat: Chat
-	date: int
-	text: Optional[str] = None
-
-	class Config:
-		fields = {'from_': 'from'}
-
-
-class Update(BaseModel):
-	update_id: int
-	message: Message
-
-
-class TelegramResponse(BaseModel):
-	ok: bool
-	result: List[Update]
+	async with httpx.AsyncClient() as client:
+		response = await client.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage', json=payload)
+		return {"status": response.status_code, "message": response.text}
