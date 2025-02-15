@@ -7,11 +7,11 @@ from sqlalchemy.orm import joinedload
 from app.api.routes.auth_api import oauth2_bearer
 from app.core.utils.get_db import DB_DEPENDENCY
 from app.core.utils.order_status import OrderStatus
-from app.core.utils.telegram_bot_response import send_order_notification_to_telegram
 from app.db.models import Book, Order
 from app.db.models.order import OrderItem
 from app.schemes.order_scheme import OrderCreate
 from app.services.auth_service import verify_token
+from app.services.telegram_bot_service import send_order_notification_to_telegram
 
 router = APIRouter(prefix='/order', tags=['order'])
 
